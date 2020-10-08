@@ -7,6 +7,7 @@ const (
 	NUMBER  = "number"
 
 	UnitHectopascal = "hectopascal"
+	UnitKelvin      = "kelvin"
 
 	AlarmProperty                    = "AlarmProperty"
 	BarometricPressureProperty       = "BarometricPressureProperty"
@@ -39,6 +40,10 @@ const (
 	VoltageProperty                  = "VoltageProperty"
 )
 
+type IPropertyEvent interface {
+	OnPropertyChanged(interface{})
+}
+
 type Property struct {
 	AtType      string `json:"@type"` //引用的类型
 	Type        string `json:"type"`  //数据的格式
@@ -50,9 +55,12 @@ type Property struct {
 	ReadOnly bool   `json:"read_only"`
 	Visible  bool   `json:"visible"`
 
+	EventEmitter IPropertyEvent
+
 	Minimum interface{} `json:"minimum,omitempty,string"`
 	Maximum interface{} `json:"maximum,omitempty,string"`
 	Value   interface{}
+	Enum    []interface{}
 }
 
 func NewStringProperty(name string, atType string) *Property {
@@ -68,6 +76,7 @@ func NewStringProperty(name string, atType string) *Property {
 		Minimum:     nil,
 		Maximum:     nil,
 		Value:       nil,
+		Enum:        nil,
 	}
 	return p
 }
@@ -75,7 +84,7 @@ func NewStringProperty(name string, atType string) *Property {
 func NewBooleanProperty(name string, atType string) *Property {
 	p := &Property{
 		AtType:      atType,
-		Type:        STRING,
+		Type:        BOOLEAN,
 		Title:       "",
 		Description: "",
 		Name:        name,
@@ -123,13 +132,26 @@ func NewIntegerProperty(name string, atType string) *Property {
 	return p
 }
 
-func NewAlarmProperty(name string) *Property {
-	prop := NewBooleanProperty(name, AlarmProperty)
-	return prop
+func (prop *Property) setValue(value interface{}) bool {
+
+	var oldValue = prop.Value
+
+	var hasChanged = value != oldValue
+	if hasChanged {
+		prop.setCachedValueAndNotify(value)
+	}
+	return hasChanged
 }
 
-func NewAlarmBarometricPressureProperty(name string) *Property {
-	prop := NewNumberProperty(name, BarometricPressureProperty)
-	prop.Unit = UnitHectopascal
-	return prop
+func (prop *Property) setCachedValueAndNotify(value interface{}) {
+	prop.setCachedValue(value)
+	prop.EventEmitter.OnPropertyChanged(value)
+}
+
+func (prop *Property) setCachedValue(value interface{}) {
+	if prop.Type == BOOLEAN {
+		prop.Value = value.(bool)
+		return
+	}
+	prop.Value = value
 }

@@ -1,5 +1,7 @@
 package gateway_schema
 
+import _ "github.com/asaskevich/govalidator"
+
 const (
 	Alarm                    = "Alarm"
 	AirQualitySensor         = "AirQualitySensor"
@@ -24,12 +26,30 @@ const (
 	Thermostat               = "Thermostat"
 	VideoCamera              = "VideoCamera"
 
-	Context = "https://iot.mozilla.org/schemas/"
+	Context = "https://www.w3.org/2019/wot/td/v1"
 )
 
 type Device struct {
-	AtContext   string   `json:"@context"`
-	AtType      []string `json:"@type"`
-	Description string   `json:"description"`
-	ID          string   `json:"id"`
+	AtContext    string   `json:"@context" valid:"url,required"`
+	AtType       []string `json:"@type" valid:"url"`
+	Title        string   `json:"title,required"`
+	Titles       []string `json:"titles,omitempty"`
+	Description  string   `json:"description,omitempty"`
+	ID           string   `json:"id"`
+	Descriptions []string `json:"descriptions,omitempty"`
+	Version      string   `json:"version,omitempty"`
+	Created      string   `json:"created,omitempty"`
+	Modified     string   `json:"modified,omitempty"`
+	Support      string   `json:"support,omitempty"`
+	Properties   map[string]*Property
+}
+
+func (proxy *Device) FindProperty(propName string) *Property {
+	prop := proxy.Properties[propName]
+	return prop
+}
+
+func (proxy *Device) GetProperty(propName string) interface{} {
+	prop := proxy.FindProperty(propName)
+	return prop.Value
 }

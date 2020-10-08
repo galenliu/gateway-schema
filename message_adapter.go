@@ -3,6 +3,8 @@ package gateway_schema
 const (
 	MessageTypeAdepterAddedNotification = 4096
 
+	MessageTypeAdapterCancelRemoveDeviceCommand = 4105
+
 	MessageTypeAdapterStartPairingCommand  = 4099
 	MessageTypeAdapterCancelPairingCommand = 4100
 	MessageTypeAdapterUnloadRequest        = 4097
@@ -43,6 +45,12 @@ type AdapterRemoveDeviceRequest struct {
 }
 
 type AdapterRemoveDeviceResponse struct {
+	PluginId  string `json:"plugin_id"`
+	AdapterId string `json:"adapter_id"`
+	DeviceId  string `json:"device_id"`
+}
+
+type AdapterCancelRemoveDeviceCommand struct {
 	PluginId  string `json:"plugin_id"`
 	AdapterId string `json:"adapter_id"`
 	DeviceId  string `json:"device_id"`
